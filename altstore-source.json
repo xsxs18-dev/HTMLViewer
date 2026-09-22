@@ -1,0 +1,34 @@
+{
+  "name": "HTMLViewer",
+  "identifier": "com.xsxs18.htmlviewer.altstore-source",
+  "sourceURL": "https://raw.githubusercontent.com/xsxs18-dev/HTMLViewer/main/altstore-source.json",
+  "website": "https://github.com/xsxs18-dev/HTMLViewer",
+  "apps": [
+    {
+      "name": "HTMLViewer",
+      "bundleIdentifier": "com.xsxs18.HTMLViewer",
+      "developerName": "xsxs18",
+      "subtitle": "View, edit, and render HTML on your phone",
+      "localizedDescription": "HTMLViewer is a local HTML viewer and editor for iOS. Browse and organize HTML pages, edit the raw source, and see it rendered in a real WebView instantly, all without leaving the app. No account, no server, no analytics.",
+      "iconURL": "https://raw.githubusercontent.com/xsxs18-dev/HTMLViewer/main/HTMLViewer/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png",
+      "tintColor": "#4CC2FF",
+      "category": "utilities",
+      "version": "1.0.0",
+      "versionDate": "2026-09-22",
+      "versionDescription": "Initial release.",
+      "downloadURL": "https://github.com/xsxs18-dev/HTMLViewer/releases/download/build-1/HTMLViewer-unsigned.ipa",
+      "size": 239379,
+      "minOSVersion": "18.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "date": "2026-09-22",
+          "localizedDescription": "Initial release.",
+          "downloadURL": "https://github.com/xsxs18-dev/HTMLViewer/releases/download/build-1/HTMLViewer-unsigned.ipa",
+          "size": 239379,
+          "minOSVersion": "18.0"
+        }
+      ]
+    }
+  ]
+}

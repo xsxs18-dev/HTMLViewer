@@ -97,3 +97,39 @@ jobs:
             --title "HTMLViewer ${{ env.APP_VERSION }} (build ${{ github.run_number }})" \
             --notes-file changelog.md \
             --latest
+
+      - name: Update AltStore source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          TAG="build-${{ github.run_number }}"
+          VERSION="${{ env.APP_VERSION }}"
+          DATE=$(date -u +"%Y-%m-%d")
+          SIZE=$(stat -f%z HTMLViewer-unsigned.ipa)
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/HTMLViewer-unsigned.ipa"
+          NEW_VERSION=$(jq -n \
+            --arg version "$VERSION" \
+            --arg date "$DATE" \
+            --argjson size "$SIZE" \
+            --arg downloadURL "$DOWNLOAD_URL" \
+            --rawfile notes changes.md \
+            '{version: $version, date: $date, localizedDescription: $notes, downloadURL: $downloadURL, size: $size, minOSVersion: "18.0"}')
+          jq --argjson v "$NEW_VERSION" '
+            .apps[0].versions = [$v] + .apps[0].versions |
+            .apps[0].version = $v.version |
+            .apps[0].versionDate = $v.date |
+            .apps[0].versionDescription = $v.localizedDescription |
+            .apps[0].downloadURL = $v.downloadURL |
+            .apps[0].size = $v.size
+          ' altstore-source.json > altstore-source.tmp.json
+          mv altstore-source.tmp.json altstore-source.json
+          if git diff --quiet -- altstore-source.json; then
+            echo "No changes to altstore-source.json"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add altstore-source.json
+            git commit -m "Update AltStore source for build ${{ github.run_number }}"
+            git push origin HEAD:main
+          fi
