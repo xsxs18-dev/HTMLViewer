@@ -1,0 +1,99 @@
+name: Build IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select latest available Xcode 16
+        run: |
+          XCODE_PATH=$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XCODE_PATH" ]; then
+            XCODE_PATH=$(ls -d /Applications/Xcode*.app | sort -V | tail -1)
+          fi
+          echo "Using $XCODE_PATH"
+          sudo xcode-select -switch "$XCODE_PATH/Contents/Developer"
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Set build number
+        run: /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" HTMLViewer/Resources/Info.plist
+
+      - name: Read app version
+        run: |
+          VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" HTMLViewer/Resources/Info.plist)
+          echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Build (unsigned, generic iOS device)
+        run: |
+          xcodebuild build \
+            -project HTMLViewer.xcodeproj \
+            -scheme HTMLViewer \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM=""
+
+      - name: Package IPA
+        run: |
+          set -e
+          APP_PATH="build/Build/Products/Release-iphoneos/HTMLViewer.app"
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -qr HTMLViewer-unsigned.ipa Payload
+          rm -rf Payload
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HTMLViewer-unsigned-ipa
+          path: HTMLViewer-unsigned.ipa
+          retention-days: 14
+
+      - name: Write changelog
+        run: |
+          PREV_TAG=$(git tag -l 'build-*' --sort=-v:refname | head -1)
+          if [ -n "$PREV_TAG" ]; then
+            git log "$PREV_TAG"..HEAD --pretty=format:"- %s" --no-merges > changes.md
+          else
+            git log --pretty=format:"- %s" --no-merges > changes.md
+          fi
+          {
+            echo "Unsigned .ipa — sign it locally with Sideloadly or AltStore using your own Apple ID before installing."
+            echo ""
+            echo "### Changes"
+            cat changes.md
+          } > changelog.md
+
+      - name: Create release with the .ipa attached
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          TAG="build-${{ github.run_number }}"
+          gh release create "$TAG" HTMLViewer-unsigned.ipa \
+            --repo "${{ github.repository }}" \
+            --title "HTMLViewer ${{ env.APP_VERSION }} (build ${{ github.run_number }})" \
+            --notes-file changelog.md \
+            --latest

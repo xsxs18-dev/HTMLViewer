@@ -1,0 +1,43 @@
+name: HTMLViewer
+options:
+  bundleIdPrefix: com.xsxs18
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+targets:
+  HTMLViewer:
+    type: application
+    platform: iOS
+    sources:
+      - path: HTMLViewer
+    info:
+      path: HTMLViewer/Resources/Info.plist
+      properties:
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        CFBundleVersion: "0"
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleLocalizations:
+          - en
+          - de
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.xsxs18.HTMLViewer
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1,2"
+schemes:
+  HTMLViewer:
+    build:
+      targets:
+        HTMLViewer: all
+    run:
+      config: Debug
